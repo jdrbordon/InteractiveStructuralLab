@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html lang="es-ES">
+  <head>
+
+    <meta charset="UTF-8">
+
+    <title>Enseñanza interactiva de estructuras (ULPGC-EIIC)</title>
+
+    <script src="math.js"></script> <!-- Importar libreria desde archivo -->
+
+    <script src="plotly-3.4.0.min.js"></script> <!-- Importar libreria desde archivo -->
+
+    <style>
+      @import url('https://fonts.googleapis.com/css2?family=Rubik:ital,wght@0,300..900;1,300..900&display=swap');
+      body {
+        font-family: "Rubik", Arial, Helvetica, sans-serif;
+        color: #0066A1;
+        background: #FFFFFF;
+        height: 100%;
+        margin: 0;   
+        display: flex;
+        flex-direction: column;        
+      }
+        
+      .content {
+          flex: 1;
+      }
+      /*HEADER*/
+
+      .header-container {
+        display: flex;
+        align-items: center; /* Centrado vertical */
+        justify-content: space-between;
+        padding: 1rem;
+        /* El contenedor medirá lo que mida el hijo más alto */
+      }
+
+      .header-side {
+        flex: 1; /* Hace que ambos lados ocupen el mismo espacio */
+        display: flex;
+        align-items: center;
+      }
+
+      .logo {
+        max-height: 150px; /* Ajusta según necesites */
+        width: auto;
+        display: block;
+      }
+
+      .header-center {
+        flex: 3; /* Da más espacio al texto */
+        text-align: left;
+      }
+
+      /* Contenedor "inteligente" */
+      .contenedor-flexible {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+        padding: 10px;
+        justify-content: center;
+      }
+      /* Estilo de los recuadros (para grupos de datos) */
+      .tarjeta-datos {
+        background: white;
+        border-radius: 6px;
+        padding: 10px;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.08);
+        border: 1px solid #e1e4e8;
+        flex: 1 1 200px;
+        box-sizing: border-box;
+      }
+      .tarjeta-datos h3 {
+        margin-top: 0;
+        color: #0066A1;
+        border-bottom: 3px solid #FFA100;
+        padding-bottom: 10px;
+        font-size: 1.2rem;
+      }
+      .tarjeta-datos h4 {
+        margin-top: 0;
+        color: #0066A1;
+        border-top: 1px solid #FFA100;
+        padding-top: 5px;
+        padding-bottom: 5px;
+        font-size: 1rem;
+      }
+      .tarjeta-datos td {
+        padding: 6px;
+
+      }
+      /* Estilo de los inputs dentro de los recuadros */
+      .campo {
+        display: flex;
+        justify-content: left;
+        align-items: left;
+        margin-bottom: 12px;
+      }
+      input {
+        width: 80px;
+        padding: 2px;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+        text-align: center;
+      }
+      output {
+        padding: 6px;
+        font-weight: bold;
+      }
+      /* Si la pantalla es muy pequeña (móvil), ajustamos el padding */
+      @media (max-width: 480px) {
+        .contenedor-flexible {
+          padding: 10px;
+          gap: 15px;
+        }
+      }
+      .contenedor-inputs {
+        display: grid;
+        /* La clave está aquí: */
+        grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+        gap: 10px; /* Espacio entre los inputs */
+        padding: 2px;
+      }
+      input {
+        box-sizing: border-box;
+      }
+      footer {
+        font-weight: bold;
+        text-align: center;
+        padding: 10px;
+      }
+      
+      nav { background-color: #0066A1; }
+
+      nav ul { 
+          list-style: none; 
+          margin: 0; 
+          padding: 0; 
+          display: flex; 
+      }
+
+      nav ul li { 
+          position: relative; /* Necesario para que el submenú se alinee con el padre */
+      }
+
+      nav ul li a {
+          display: block;
+          color: white;
+          text-decoration: none;
+          padding: 15px 25px;
+          font-weight: bold;
+          transition: 0.3s;
+      }
+
+      nav ul li a:hover { background-color: #FFA100; }
+
+      .active { background-color: #565A5C !important; }
+
+      /* Escondemos el submenú por defecto */
+      .desplegable {
+          display: none; 
+          position: absolute;
+          top: 100%; /* Aparece justo debajo del padre */
+          left: 0;
+          background-color: #004A75; /* Un tono un poco más oscuro que el principal */
+          min-width: 200px;
+          flex-direction: column; /* Los items del submenú van uno bajo otro */
+          box-shadow: 0px 8px 16px rgba(0,0,0,0.2);
+          z-index: 100;
+      }
+
+      /* Estilo de los enlaces dentro del submenú */
+      .desplegable li a {
+          padding: 12px 20px;
+          font-size: 0.9em;
+          border-bottom: 1px solid rgba(255,255,255,0.1);
+      }
+
+      /* Mostramos el submenú al pasar el ratón sobre el 'li' padre */
+      .tiene-desplegable:hover .desplegable {
+          display: flex;
+      }
+
+      /* Cambio de color al pasar el ratón por los items del submenú */
+      .desplegable li a:hover {
+          background-color: #565A5C;
+      }       
+      /* Aseguramos que los elementos del primer submenú también sean relativos */
+      .desplegable li {
+          position: relative;
+      }
+
+      /* Estilos para el segundo submenú (Nivel 3) */
+      .sub-desplegable {
+          display: none; /* Escondido por defecto */
+          position: absolute;
+          top: 0;        /* Alineado con la parte superior del padre */
+          left: 100%;    /* Desplazado totalmente a la derecha */
+          background-color: #565A5C; /* Un tono diferente para distinguir niveles */
+          min-width: 200px;
+          list-style: none;
+          margin: 0;
+          padding: 0;
+          box-shadow: 4px 0px 10px rgba(0,0,0,0.2);
+      }
+
+      /* Mostramos el segundo nivel al hacer hover en su padre */
+      .tiene-sub-desplegable:hover .sub-desplegable {
+          display: block;
+      }
+
+      /* Ajuste de color para los enlaces del tercer nivel */
+      .sub-desplegable li a {
+          background-color: #565A5C;
+      }
+
+      .sub-desplegable li a:hover {
+          background-color: #FFA100;
+      }
+    </style>
+  </head>
+  <body>
+
+    <header class="header-container">
+      <div class="header-side">
+        <img src="eiic_hc.png" alt="Logo" class="logo">
+      </div>
+      <div class="header-center">
+        <h1>Enseñanza interactiva de estructuras</h1>
+      </div>
+      <div class="header-side"></div>
+    </header>
+
+    <nav>
+        <ul class="menu-principal">
+            <li><a href="index.html">Inicio</a></li>
+            
+            <li class="tiene-desplegable">
+                <a href="#">Hormigón armado</a>
+                <ul class="desplegable">
+                    <li class="tiene-sub-desplegable">
+                        <a href="#">ELU de tensiones normales</a>
+                        <ul class="sub-desplegable">
+                            <li><a href="HA_ELU_flexion_simple_1.html">Flexión simple (rectangular, simple armadura)</a></li>
+                            <li><a href="HA_ELU_flexion_simple_2.html">Flexión simple (rectangular, doble armadura)</a></li>
+                            <li><a href="#">Diagrama de interacción N-M</a></li>
+                        </ul>
+                    </li>
+                    <li class="sub-desplegable">
+                       <li><a href="#">ELU de cortante</a></li>
+                    </li>
+                </ul>
+            </li>
+
+            <li class="tiene-desplegable">
+                <a href="#">Acero</a>
+                <ul class="desplegable">
+                    <li class="tiene-sub-desplegable">
+                        <a href="#">ELU</a>
+                        <ul class="sub-desplegable">
+                            <li><a href="#">Resistencia de secciones</a></li>
+                            <li><a href="#">Pandeo simple</a></li>
+                            <li><a href="#">Pandeo lateral</a></li>
+                        </ul>
+                    </li>
+                    <li><a href="#">ELS</a></li>
+                </ul>
+            </li>
+
+            <li><a href="mailto:jacobdavid.rodriguezbordon@ulpgc.es">Contacto</a></li>
+        </ul>
+    </nav>
+    
+
+
+    <footer>
+    <p>&copy; <span id="year"></span> Jacob David Rodríguez Bordón · Universidad de Las Palmas de Gran Canaria · ULPGC </p>
+    </footer>
+
+
+  </body>
+</html>

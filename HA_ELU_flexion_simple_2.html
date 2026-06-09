@@ -1,0 +1,859 @@
+<!DOCTYPE html>
+<html lang="es-ES">
+  <head>
+
+    <meta charset="UTF-8">
+
+    <title>Hormigón armado - ELU de flexión simple - Sección rectangular con doble armadura</title>
+
+    <script src="math.js"></script> <!-- Importar libreria desde archivo -->
+
+    <script src="plotly-3.4.0.min.js"></script> <!-- Importar libreria desde archivo -->
+
+    <style>
+      @import url('https://fonts.googleapis.com/css2?family=Rubik:ital,wght@0,300..900;1,300..900&display=swap');
+      body {
+        font-family: "Rubik", Arial, Helvetica, sans-serif;
+        color: #0066A1;
+        background: #FFFFFF;
+        height: 100%;
+        margin: 0;        
+      }
+
+      /*HEADER*/
+
+      .header-container {
+        display: flex;
+        align-items: center; /* Centrado vertical */
+        justify-content: space-between;
+        padding: 1rem;
+        /* El contenedor medirá lo que mida el hijo más alto */
+      }
+
+      .header-side {
+        flex: 1; /* Hace que ambos lados ocupen el mismo espacio */
+        display: flex;
+        align-items: center;
+      }
+
+      .logo {
+        max-height: 150px; /* Ajusta según necesites */
+        width: auto;
+        display: block;
+      }
+
+      .header-center {
+        flex: 3; /* Da más espacio al texto */
+        text-align: left;
+      }
+
+      /* Contenedor "inteligente" */
+      .contenedor-flexible {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+        padding: 10px;
+        justify-content: center;
+      }
+      /* Estilo de los recuadros (para grupos de datos) */
+      .tarjeta-datos {
+        background: white;
+        border-radius: 6px;
+        padding: 10px;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.08);
+        border: 1px solid #e1e4e8;
+        flex: 1 1 200px;
+        box-sizing: border-box;
+      }
+      .tarjeta-datos h3 {
+        margin-top: 0;
+        color: #0066A1;
+        border-bottom: 3px solid #FFA100;
+        padding-bottom: 10px;
+        font-size: 1.2rem;
+      }
+      .tarjeta-datos h4 {
+        margin-top: 0;
+        color: #0066A1;
+        border-top: 1px solid #FFA100;
+        padding-top: 5px;
+        padding-bottom: 5px;
+        font-size: 1rem;
+      }
+      .tarjeta-datos td {
+        padding: 6px;
+
+      }
+      /* Estilo de los inputs dentro de los recuadros */
+      .campo {
+        display: flex;
+        justify-content: left;
+        align-items: left;
+        margin-bottom: 12px;
+      }
+      input {
+        width: 80px;
+        padding: 2px;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+        text-align: center;
+      }
+      output {
+        padding: 6px;
+        font-weight: bold;
+      }
+      /* Si la pantalla es muy pequeña (móvil), ajustamos el padding */
+      @media (max-width: 480px) {
+        .contenedor-flexible {
+          padding: 10px;
+          gap: 15px;
+        }
+      }
+      .contenedor-inputs {
+        display: grid;
+        /* La clave está aquí: */
+        grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+        gap: 10px; /* Espacio entre los inputs */
+        padding: 2px;
+      }
+      input {
+        box-sizing: border-box;
+      }
+      footer {
+        font-weight: bold;
+        text-align: center;
+        padding: 10px;
+        width: 100%;
+      }
+      
+      nav { background-color: #0066A1; }
+
+      nav ul { 
+          list-style: none; 
+          margin: 0; 
+          padding: 0; 
+          display: flex; 
+      }
+
+      nav ul li { 
+          position: relative; /* Necesario para que el submenú se alinee con el padre */
+      }
+
+      nav ul li a {
+          display: block;
+          color: white;
+          text-decoration: none;
+          padding: 15px 25px;
+          font-weight: bold;
+          transition: 0.3s;
+      }
+
+      nav ul li a:hover { background-color: #FFA100; }
+
+      .active { background-color: #565A5C !important; }
+
+      /* Escondemos el submenú por defecto */
+      .desplegable {
+          display: none; 
+          position: absolute;
+          top: 100%; /* Aparece justo debajo del padre */
+          left: 0;
+          background-color: #004A75; /* Un tono un poco más oscuro que el principal */
+          min-width: 200px;
+          flex-direction: column; /* Los items del submenú van uno bajo otro */
+          box-shadow: 0px 8px 16px rgba(0,0,0,0.2);
+          z-index: 100;
+      }
+
+      /* Estilo de los enlaces dentro del submenú */
+      .desplegable li a {
+          padding: 12px 20px;
+          font-size: 0.9em;
+          border-bottom: 1px solid rgba(255,255,255,0.1);
+      }
+
+      /* Mostramos el submenú al pasar el ratón sobre el 'li' padre */
+      .tiene-desplegable:hover .desplegable {
+          display: flex;
+      }
+
+      /* Cambio de color al pasar el ratón por los items del submenú */
+      .desplegable li a:hover {
+          background-color: #565A5C;
+      }  
+            /* Aseguramos que los elementos del primer submenú también sean relativos */
+      .desplegable li {
+          position: relative;
+      }
+
+      /* Estilos para el segundo submenú (Nivel 3) */
+      .sub-desplegable {
+          display: none; /* Escondido por defecto */
+          position: absolute;
+          top: 0;        /* Alineado con la parte superior del padre */
+          left: 100%;    /* Desplazado totalmente a la derecha */
+          background-color: #565A5C; /* Un tono diferente para distinguir niveles */
+          min-width: 200px;
+          list-style: none;
+          margin: 0;
+          padding: 0;
+          box-shadow: 4px 0px 10px rgba(0,0,0,0.2);
+      }
+
+      /* Mostramos el segundo nivel al hacer hover en su padre */
+      .tiene-sub-desplegable:hover .sub-desplegable {
+          display: block;
+      }
+
+      /* Ajuste de color para los enlaces del tercer nivel */
+      .sub-desplegable li a {
+          background-color: #565A5C;
+      }
+
+      .sub-desplegable li a:hover {
+          background-color: #FFA100;
+      }
+    </style>
+  </head>
+  <body>
+
+    <header class="header-container">
+      <div class="header-side">
+        <img src="eiic_hc.png" alt="Logo" class="logo">
+      </div>
+      <div class="header-center">
+        <h1>Hormigón armado: ELU de flexión simple.</h1>
+        <h2>Sección rectangular con doble armadura</h2>
+      </div>
+      <div class="header-side"></div>
+    </header>
+
+    <nav>
+        <ul class="menu-principal">
+            <li><a href="index.html">Inicio</a></li>
+            
+            <li class="tiene-desplegable">
+                <a href="#">Hormigón armado</a>
+                <ul class="desplegable">
+                    <li class="tiene-sub-desplegable">
+                        <a href="#">ELU de tensiones normales</a>
+                        <ul class="sub-desplegable">
+                            <li><a href="HA_ELU_flexion_simple_1.html">Flexión simple (rectangular, simple armadura)</a></li>
+                            <li><a href="HA_ELU_flexion_simple_2.html">Flexión simple (rectangular, doble armadura)</a></li>
+                            <li><a href="#">Diagrama de interacción N-M</a></li>
+                        </ul>
+                    </li>
+                    <li class="sub-desplegable">
+                       <li><a href="#">ELU de cortante</a></li>
+                    </li>
+                </ul>
+            </li>
+
+            <li class="tiene-desplegable">
+                <a href="#">Acero</a>
+                <ul class="desplegable">
+                    <li class="tiene-sub-desplegable">
+                        <a href="#">ELU</a>
+                        <ul class="sub-desplegable">
+                            <li><a href="#">Resistencia de secciones</a></li>
+                            <li><a href="#">Pandeo simple</a></li>
+                            <li><a href="#">Pandeo lateral</a></li>
+                        </ul>
+                    </li>
+                    <li><a href="#">ELS</a></li>
+                </ul>
+            </li>
+
+            <li><a href="jacobdavid.rodriguezbordon@ulpgc.es">Contacto</a></li>
+        </ul>
+    </nav>  
+
+    <div class="contenedor-flexible">
+      <div class="tarjeta-datos">
+          <h3>Hormigón</h3>
+          <div class="campo">
+            <table>
+              <tr>
+                  <td><i>f</i><sub>ck</sub> </td>
+                  <td>= <input type="number" id="fck" value="30" step="5" min="0" lang="en-US"> MPa</td>
+              </tr>
+              <tr>
+                  <td><i>γ</i><sub>c</sub></td>
+                  <td>= <input type="number" id="gammac" value="1.5" step="0.05" min="0" lang="en-US"></td>
+              </tr>
+              <tr>
+                  <td><i>ε</i><sub>cu</sub></td>
+                  <td>= <input type="number" id="epscu" value="3.5" step="0.1" min="0" lang="en-US"> ‰</td>
+              </tr>
+            </table>
+          </div>
+      </div>
+      <div class="tarjeta-datos">
+          <h3>Acero</h3>
+          <div class="campo">
+            <table>
+              <tr>
+                  <td><i>f</i><sub>yk</sub></td>
+                  <td>= <input type="number" id="fyk" value="500" step="50" min="0" lang="en-US"> MPa</td>
+              </tr>
+              <tr>
+                  <td><i>γ</i><sub>s</sub></td>
+                  <td>= <input type="number" id="gammas" value="1.15" step="0.05" min="0" lang="en-US"></td>
+              </tr>
+            </table>
+          </div>
+      </div>
+      <div class="tarjeta-datos">
+        <h3>Dimensiones</h3>
+        <div class="campo">
+          <table>
+            <tr>
+              <td><i>h</i></td>
+              <td>= <input type="number" id="h" value="50" step="1" min="0" lang="en-US"> cm</td>
+            </tr>
+            <tr>
+              <td><i>b</i></td>
+              <td>= <input type="number" id="b" value="30" step="1" min="0" lang="en-US"> cm</td>
+            </tr>
+          </table>
+        </div>
+      </div>
+      <div class="tarjeta-datos">
+        <h3>Arm. de tracción</h3>
+        <div class="campo">
+          <table>
+            <tr>
+              <td><i>d</i><sub>1</sub></td>
+              <td>= <input type="number" id="d1" value="5.0" step="1" min="0" lang="en-US"> cm</td>
+            </tr>
+            <tr>
+              <td><i>A</i><sub>s1</sub></td>
+              <td>= <input type="number" id="As1" value="20.0" step="0.1" min="0" lang="en-US"> cm<sup>2</sup></td>
+            </tr>
+          </table>
+        </div>
+      </div>
+      <div class="tarjeta-datos">
+        <h3>Arm. de compresión</h3>
+        <div class="campo">
+          <table>
+            <tr>
+              <td><i>d</i><sub>2</sub></td>
+              <td>= <input type="number" id="d2" value="5.0" step="1" min="0" lang="en-US"> cm</td>
+            </tr>
+            <tr>
+              <td><i>A</i><sub>s2</sub></td>
+              <td>= <input type="number" id="As2" value="2.0" step="0.1" min="0" lang="en-US"> cm<sup>2</sup></td>
+            </tr>
+          </table>
+        </div>
+      </div>
+      <div class="tarjeta-datos">
+        <h3>Ductilidad</h3>
+        <div class="campo">
+          <table>
+            <tr>
+              <td><i>&epsilon;</i><sub>s1</sub> / <i>&epsilon;</i><sub>yd</sub></td>
+              <td>= <output id="eps1_ratio"></output></td>
+            </tr>
+            <tr>
+              <td><i>x</i> / <i>d</i></td>
+              <td>= <output id="xi"></output></td>
+            </tr>
+          </table>
+        </div>
+      </div>
+      <div class="tarjeta-datos">
+        <h3>Resistencia</h3>
+        <div class="campo">
+          <table>
+            <tr>
+              <td><i>M</i><sub>Rd</sub></td>
+              <td>= <output id="MRd"></output> kN·m</td>
+            </tr>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <div class="contenedor-flexible">
+      <div class="tarjeta-datos">
+        <h3>Estado de la sección en rotura</h3>
+        <div id="gd" style="width: 100%; height: 50vh; min-height: 300px; min-width: 300px;"></div>
+        <h4>Ajustes del gráfico</h4>
+        <div class="contenedor-inputs">
+        <button type="button" id="canvas_reset">Resetear vista</button>
+        <div><label for="canvas_font_size">Tamaño fuente [pt]:</label><input type="number" id="canvas_font_size" value="14" step="1" lang="en-US"></div>
+        <div><label for="canvas_sep_text">Separación anotaciones [%]:</label><input type="number" id="canvas_sep_text" value="5" step="1" lang="en-US"></div>
+        <div><label for="canvas_sep_graf">Separación gráficas [%]:</label><input type="number" id="canvas_sep_graf" value="15" step="1" lang="en-US"></div>
+        <div><label for="canvas_bdef">Ancho diagrama deformaciones [%]:</label><input type="number" id="canvas_bdef" value="1.5" step="0.1" lang="en-US"></div>
+        <div><label for="canvas_bten">Ancho diagrama tensiones [%]:</label><input type="number" id="canvas_bten" value="1" step="0.1" lang="en-US"></div>
+        <div><label for="canvas_bb">Largo de trozo de elemento [%]:</label><input type="number" id="canvas_bb" value="0.5" step="0.1" lang="en-US"></div>
+        </div>
+     </div>
+    </div>
+
+    <div class="contenedor-flexible">
+      <div class="tarjeta-datos">
+        <h3>Hipótesis de cálculo</h3>
+        <p><b>Norma:</b> Código Estructural (2021).</p>
+        <p><b>ELU de flexión simple:</b> según Anejo 19, epígrafe 6.1.</p>
+        <p><b>Ley de comportamiento del acero:</b> ley elasto-plástica perfecta sin límite de deformación, según Anejo 19, epígrafe 3.2.7. En el diagrama de deformaciones se muestra un límite de deformación <i>ε</i><sub>ud</sub>=10‰ sólo a efectos ilustrativos, ya que no es preceptivo para esta ley, sólo para la ley bilineal.</p>
+        <p><b>Ley de comportamiento del hormigón:</b> diagrama rectangular, según Anejo 19, epígrafe 3.1.7.</p>
+      </div>
+    </div>
+
+    <footer>
+    <p>&copy; <span id="year"></span> Jacob David Rodríguez Bordón · Universidad de Las Palmas de Gran Canaria · ULPGC </p>
+    </footer>
+
+    <script>
+
+      // Evita introducir comas en los campos numéricos.
+      document.querySelectorAll('input[type="number"]').forEach(input => {
+        input.addEventListener('keydown', function(e) {
+          if (e.key === ',' || e.key === 'Decimal') {
+              e.preventDefault();
+          }
+        });
+        input.addEventListener('input', function() {
+          if (this.value.includes(',')) {
+              this.value = this.value.replace(',', '.');
+          }
+        });
+      });
+
+      document.getElementById("canvas_reset").addEventListener("click", function() {
+        document.getElementById("canvas_font_size").value = 14;
+        document.getElementById("canvas_sep_text").value = 5;
+        document.getElementById("canvas_sep_graf").value = 15;
+        document.getElementById("canvas_bdef").value = 1.5;
+        document.getElementById("canvas_bten").value = 1;
+        document.getElementById("canvas_bb").value = 0.5;
+        calcular();
+      });
+
+      const m = math; // Atajo para no escribir 'math' todo el tiempo
+
+      // Resolver ecuación cuadrática
+      function resolverCuadratica(a, b, c) {
+        const discriminante = b * b - 4 * a * c;
+        if (discriminante < 0) {
+          alert("Error: Houston, tenemos un problema. El discriminante es negativo. No existen raíces reales.");
+          return []; // No hay raíces reales
+        }
+
+        const x1 = (-b + Math.sqrt(discriminante)) / (2 * a);
+        const x2 = (-b - Math.sqrt(discriminante)) / (2 * a);
+
+        return discriminante === 0 ? [x1] : [x1, x2];
+      }      
+      
+      // Función para generar los puntos de la grieta
+      function generarGrieta(x1, y1, x2, y2, rugosidad, iteraciones) {
+          let puntos = [{x: x1, y: y1}, {x: x2, y: y2}];
+
+          for (let i = 0; i < iteraciones; i++) {
+              let nuevosPuntos = [];
+              for (let j = 0; j < puntos.length - 1; j++) {
+                  let p1 = puntos[j];
+                  let p2 = puntos[j+1];
+
+                  // Punto medio
+                  let midX = (p1.x + p2.x) / 2;
+                  let midY = (p1.y + p2.y) / 2;
+
+                  // Desplazamiento perpendicular aleatorio (Rugosidad)
+                  // Usamos math.random para el desplazamiento
+                  let desplazamiento = (Math.random() - 0.5) * rugosidad / (i + 1);
+
+                  // Calculamos el vector perpendicular para que la rugosidad sea lateral
+                  let dx = p2.x - p1.x;
+                  let dy = p2.y - p1.y;
+                  let normalX = -dy;
+                  let normalY = dx;
+                  let longitud = Math.sqrt(normalX**2 + normalY**2);
+
+                  nuevosPuntos.push(p1);
+                  nuevosPuntos.push({
+                      x: midX + (normalX / longitud) * desplazamiento,
+                      y: midY + (normalY / longitud) * desplazamiento
+                  });
+              }
+              nuevosPuntos.push(puntos[puntos.length - 1]);
+              puntos = nuevosPuntos;
+          }
+          return puntos;
+      }
+
+
+      function leerNumero(id) {
+          let texto = document.getElementById(id).value;
+          // Cambia la coma por punto y convierte a número flotante
+          let numero = parseFloat(texto.replace(',', '.'));
+          //let numero = parseFloat(texto);
+          return isNaN(numero) ? 0 : numero;
+      }
+
+      function calcular() {
+        const fck = leerNumero('fck');
+        const gammac = leerNumero('gammac');
+        const epscu = leerNumero('epscu');
+        const fyk = leerNumero('fyk');
+        const gammas = leerNumero('gammas');
+        const h = leerNumero('h');
+        const b = leerNumero('b');
+        const d1 = leerNumero('d1');
+        const As1 = leerNumero('As1');
+        const d2 = leerNumero('d2');
+        const As2 = leerNumero('As2');
+
+        const fcd = fck/gammac;
+        const fyd = fyk/gammas;
+        const Es = 200000.0;
+        const epsyd = fyd/Es*1000.0;
+        const epsud = 10.0;
+        const xilim = epscu/(epscu+epsyd);
+        const ke = epscu/epsyd;
+        const d = h-d1;
+
+        const omega1 = fyd*As1/(fcd*b*d);
+        const omega2 = fyd*As2/(fcd*b*d);
+
+
+        // Hipótesis 1: eps1>=epsyd, eps2>=epsyd
+        var xi=1.25*(omega1-omega2);
+        var eps1 = epscu*(1.0-xi)/xi;
+        var eps2 = epscu*(xi-d2/d)/xi;
+        // Chequear hipótesis 1
+        if (eps1 >= epsyd && eps2 >= epsyd) {
+          var sigs1 = fyd;
+          var sigs2 = fyd;
+        } else {
+          // Hipótesis 2: eps1>=epsyd, -epsyd<eps2<epsyd
+          var coef_b = -1.25*(omega1-ke*omega2);
+          var coef_c = -1.25*d2/d*ke*omega2;
+          var xi_vec = resolverCuadratica(1.0, coef_b, coef_c);
+          var xi_vec = xi_vec.filter(n => n > 0 && n < 1);
+          if (xi_vec.length === 1) {
+              var xi = xi_vec[0];
+          } else if (xi_vec.length > 1) {
+              console.warn("Hay más de un elemento en el rango.");
+          } else {
+              console.warn("No se encontró ningún elemento en el rango.");
+          };
+          var eps1 = epscu*(1.0-xi)/xi;
+          var eps2 = epscu*(xi-d2/d)/xi;
+          // Chequear hipótesis 2
+          if (eps1 >= epsyd && eps2 < epsyd && eps2 > -epsyd) {
+            var sigs1 = fyd;
+            var sigs2 = Es*eps2/1000.0;
+          } else {
+            //Hipótesis 3: -epsyd<eps1<epsyd, eps2>=epsyd
+            var coef_b =  1.25*(ke*omega1+omega2);
+            var coef_c = -1.25*ke*omega1;
+            var xi_vec = resolverCuadratica(1.0, coef_b, coef_c);
+            var xi_vec = xi_vec.filter(n => n > 0 && n < 1);
+            if (xi_vec.length === 1) {
+                var xi = xi_vec[0];
+            } else if (xi_vec.length > 1) {
+                console.warn("Hay más de un elemento en el rango.");
+            } else {
+                console.warn("No se encontró ningún elemento en el rango.");
+            };
+            var eps1 = epscu*(1.0-xi)/xi;
+            var eps2 = epscu*(xi-d2/d)/xi;            
+            // Chequear hipótesis 3
+            if (eps1 < epsyd && eps1 > -epsyd && eps2 >= epsyd) {
+              var sigs1 = Es*eps1/1000.0;
+              var sigs2 = fyd;
+            } else {
+              //Hipótesis 4: -epsyd<eps1<epsyd, -epsyd<eps2<epsyd
+              var coef_b =  1.25*ke*(omega1+omega2);
+              var coef_c = -1.25*ke*(omega1+d2/d*omega2);
+              var xi_vec = resolverCuadratica(1.0, coef_b, coef_c);
+              var xi_vec = xi_vec.filter(n => n > 0 && n < 1);
+              if (xi_vec.length === 1) {
+                  var xi = xi_vec[0];
+              } else if (xi_vec.length > 1) {
+                  console.warn("Hay más de un elemento en el rango.");
+              } else {
+                  console.warn("No se encontró ningún elemento en el rango.");
+              };
+              var eps1 = epscu*(1.0-xi)/xi;
+              var eps2 = epscu*(xi-d2/d)/xi;            
+              // Chequear hipótesis 3
+              if (eps1 < epsyd && eps1 > -epsyd && eps2 < epsyd && eps2 > -epsyd) {
+                var sigs1 = Es*eps1/1000.0;
+                var sigs2 = Es*eps2/1000.0;
+              } else {
+                alert("Error: Houston, tenemos un problema. No hagas jugarretas, no he incluido los casos rebuscados de plastificación de las armaduras a la inversa de como se supone trabajan.");
+              };
+            };
+          };
+        };
+        const MRd = (fcd*0.8*xi*d*b*(d-0.4*xi*d)+sigs2*As2*(d-d2))/1000.0;
+        
+        document.getElementById('eps1_ratio').innerText = m.round(eps1/epsyd,2);
+        document.getElementById('xi'  ).innerText = m.round(xi,3);
+        document.getElementById('MRd' ).innerText = m.round(MRd,1);
+
+
+        // CANVAS
+
+        const canvas_fs = leerNumero('canvas_font_size');
+        const canvas_st = leerNumero('canvas_sep_text'); // % de alguna dimension de referencia
+        const canvas_rs = m.max(h,b); // Reference size
+        const canvas_sg = leerNumero('canvas_sep_graf'); // % de canvas_rs
+        const canvas_sep = canvas_sg/100*canvas_rs;
+        const canvas_bb   = leerNumero('canvas_bb')*canvas_rs;
+        const canvas_bdef = leerNumero('canvas_bdef')*canvas_rs;
+        const canvas_bten = leerNumero('canvas_bten')*canvas_rs;
+
+        const gdefx0 = b + canvas_sep + canvas_bdef - canvas_bb;
+        const gtenx0 = b + 2*canvas_sep + canvas_bdef + canvas_bten - canvas_bb;
+        const bu = canvas_bdef-canvas_bb;
+        const bs = canvas_bten-canvas_bb;
+
+        const hAs1 = As1/(0.8*b);
+        const As1x0 = 0.1*b;
+        const As1x1 = 0.9*b;
+        const As1y0 = d1-0.5*hAs1;
+        const As1y1 = d1+0.5*hAs1;
+        
+        const hAs2 = As2/(0.8*b);
+        const As2x0 = 0.1*b;
+        const As2x1 = 0.9*b;
+        const As2y0 = h-d2-0.5*hAs2;
+        const As2y1 = h-d2+0.5*hAs2;        
+
+        const grieta1 = generarGrieta(gdefx0              , h-xi*d,              gdefx0, 0, 0.02*canvas_rs, 4);
+        const grieta2 = generarGrieta(gdefx0+0.5*canvas_bb, h-xi*d,gdefx0+0.5*canvas_bb, 0, 0.02*canvas_rs, 4);
+
+        // Sección
+        const seccion_bruta = {
+              x: [0, b, b, 0, 0],
+              y: [0, 0, h, h, 0],
+              mode: 'lines',
+              fill: 'toself',
+              fillcolor: 'rgba(220, 220, 220, 1)',
+              line: { color: 'black', shape: 'linear',  width: 1 },
+          };
+        const seccion_ln = {
+              x: [0, b],
+              y: [h-xi*d, h-xi*d],
+              mode: 'lines',
+              line: { color: 'black' , dash: 'dash', width: 1}
+          };
+        const area_As1 = {
+              x: [As1x0,As1x1,As1x1,As1x0,As1x0],
+              y: [As1y0,As1y0,As1y1,As1y1,As1y0],
+              mode: 'lines',
+              fill: 'toself',
+              fillcolor: 'rgba(128, 128, 128, 1)',
+              line: { color: 'black', shape: 'linear',  width: 1 },
+          };
+        const area_As2 = {
+              x: [As2x0,As2x1,As2x1,As2x0,As2x0],
+              y: [As2y0,As2y0,As2y1,As2y1,As2y0],
+              mode: 'lines',
+              fill: 'toself',
+              fillcolor: 'rgba(128, 128, 128, 1)',
+              line: { color: 'black', shape: 'linear',  width: 1 },
+          };
+        // Deformaciones
+        const def_grietas = {
+            x: [gdefx0+canvas_bb, gdefx0, gdefx0, ...grieta1.map(p => p.x), gdefx0+canvas_bb, null, ...grieta2.map(p => p.x)],
+            y: [               h,      h, h-xi*d, ...grieta1.map(p => p.y),                0, null, ...grieta2.map(p => p.y)],
+            mode: 'lines',
+            line: { color: 'black', shape: 'linear',  width: 1 },
+            type: 'scatter'
+        };
+        const def_hormigon = {
+              x: [gdefx0+canvas_bb, gdefx0, gdefx0, ...grieta1.map(p => p.x), gdefx0+canvas_bb],
+              y: [               h,      h, h-xi*d, ...grieta1.map(p => p.y),                0],
+              mode: 'lines',
+              fill: 'toself',
+              fillcolor: 'rgba(220, 220, 220, 1)',
+              line: { width: 0 }
+        };
+        const def_As1 = {
+              x: [gdefx0+canvas_bb, gdefx0, gdefx0, gdefx0+canvas_bb],
+              y: [As1y0,As1y0,As1y1,As1y1,As1y0],
+              mode: 'lines',
+              fill: 'toself',
+              fillcolor: 'rgba(128, 128, 128, 1)',
+              line: { color: 'black', shape: 'linear',  width: 1 },
+          };
+        const def_As2 = {
+              x: [gdefx0+canvas_bb, gdefx0, gdefx0, gdefx0+canvas_bb],
+              y: [As2y0,As2y0,As2y1,As2y1,As2y0],
+              mode: 'lines',
+              fill: 'toself',
+              fillcolor: 'rgba(128, 128, 128, 1)',
+              line: { color: 'black', shape: 'linear',  width: 1 },
+          };        
+        const def_eps = {
+              x: [gdefx0+epscu*bu/epsud,gdefx0+eps2*bu/epsud,gdefx0,m.max(gdefx0-bu,gdefx0-eps1*bu/epsud)],
+              y: [h,h-d2,h-xi*d,m.max(d1,h-(epsud/epscu+1.0)*xi*d)],
+              mode: 'lines+markers',
+              line: { color: 'black',  width: 3 },
+              marker: {symbol: 'circle', size: 10, color: 'transparent', line: {color: 'black', width: 2}}
+          };
+
+        // Vectores tension
+        const ten_grietas = {
+            x: [gtenx0+canvas_bb, gtenx0, gtenx0, ...grieta1.map(p => p.x+canvas_bb+canvas_sep+bs), gtenx0+canvas_bb, null, ...grieta2.map(p => p.x+canvas_bb+canvas_sep+bs)],
+            y: [               h,      h, h-xi*d, ...grieta1.map(p => p.y),                0, null, ...grieta2.map(p => p.y)],
+            mode: 'lines',
+            line: { color: 'black', shape: 'linear',  width: 1 },
+            type: 'scatter'
+        };
+        const ten_hormigon = {
+              x: [gtenx0+canvas_bb, gtenx0, gtenx0, ...grieta1.map(p => p.x+canvas_bb+canvas_sep+bs), gtenx0+canvas_bb],
+              y: [               h,      h, h-xi*d, ...grieta1.map(p => p.y),                0],
+              mode: 'lines',
+              fill: 'toself',
+              fillcolor: 'rgba(220, 220, 220, 1)',
+              line: { width: 0 }
+        };
+        const ten_As1 = {
+              x: [gtenx0+canvas_bb, gtenx0, gtenx0, gtenx0+canvas_bb],
+              y: [As1y0,As1y0,As1y1,As1y1,As1y0],
+              mode: 'lines',
+              fill: 'toself',
+              fillcolor: 'rgba(128, 128, 128, 1)',
+              line: { color: 'black', shape: 'linear',  width: 1 },
+          };
+        const ten_As2 = {
+              x: [gtenx0+canvas_bb, gtenx0, gtenx0, gtenx0+canvas_bb],
+              y: [As2y0,As2y0,As2y1,As2y1,As2y0],
+              mode: 'lines',
+              fill: 'toself',
+              fillcolor: 'rgba(128, 128, 128, 1)',
+              line: { color: 'black', shape: 'linear',  width: 1 },
+          };        
+        const layout = {
+            margin: { l: 10, r: 10, t: 10, b: 10 },
+            font: {
+              size: canvas_fs, // Este será el tamaño por defecto para TODO el gráfico
+              family: 'Rubik'
+            },
+            xaxis: {
+              showgrid: false,       // Quita las líneas de la cuadrícula vertical
+              zeroline: false,       // Quita la pínea del eje X=0
+              showline: false,       // Quita la línea del borde del eje
+              showticklabels: false, // Quita los números (10, 20, 30...)
+              ticks: ""              // Quita las pequeñas marcas de los números
+            },
+            yaxis: {
+              showgrid: false,       // Quita las líneas de la cuadrícula vertical
+              zeroline: false,       // Quita la línea del eje X=0
+              showline: false,       // Quita la línea del borde del eje
+              showticklabels: false, // Quita los números (10, 20, 30...)
+              ticks: "",             // Quita las pequeñas marcas de los números
+              scaleanchor: "x",      // Mantiene la proporción geométrica
+              scaleratio: 1
+            },
+            autosize: true,
+            showlegend: false,
+            annotations: [
+              {x: b/2, y: -h*canvas_st/100, text: '<b>SECCIÓN</b>', showarrow: false},
+              {x: b+canvas_sep+0.5*canvas_bdef, y: -h*canvas_st/100, text: '<b>DEFORMACIONES</b>', showarrow: false},
+              {x: b+2*canvas_sep+canvas_bdef+0.5*canvas_bten, y: -h*canvas_st/100, text: '<b>VECTORES TENSIÓN</b>', showarrow: false},
+              //
+              {x: 0.5*b, y: d1+canvas_rs*canvas_st/100, text: "A<sub>s1</sub>="+m.round(As1,2)+"cm<sup>2</sup>", showarrow: false},
+              {x: 0.5*b, y: h-d2-canvas_rs*canvas_st/100, text: "A<sub>s2</sub>="+m.round(As2,2)+"cm<sup>2</sup>", showarrow: false},
+              //
+              {x: b+0.05*canvas_rs, y: h-xi*d, text: "Fibra neutra", showarrow: false, xanchor: "left"},
+              //
+              {x: 0, y: h+0.05*canvas_rs, ax: b, ay: h+0.05*canvas_rs, xref: 'x', yref: 'y', axref: 'x', ayref: 'y',text: '', arrowcolor: 'black', arrowhead: 4, arrowsize: 1, arrowwidth: 1},
+              {x: b, y: h+0.05*canvas_rs, ax: 0, ay: h+0.05*canvas_rs, xref: 'x', yref: 'y', axref: 'x', ayref: 'y',text: '', arrowcolor: 'black', arrowhead: 4, arrowsize: 1, arrowwidth: 1},
+              {x: 0.5*b, y: h+0.05*canvas_rs+canvas_rs*canvas_st/100, text: "b="+m.round(b,0)+"cm", showarrow: false},
+              //
+              {x: -0.05*canvas_rs, y: h, ax: -0.05*canvas_rs, ay: h-d, xref: 'x', yref: 'y', axref: 'x', ayref: 'y',text: '', arrowcolor: 'black', arrowhead: 4, arrowsize: 1, arrowwidth: 1},
+              {x: -0.05*canvas_rs, y: h-d, ax: -0.05*canvas_rs, ay: h, xref: 'x', yref: 'y', axref: 'x', ayref: 'y',text: '', arrowcolor: 'black', arrowhead: 4, arrowsize: 1, arrowwidth: 1},
+              {x: -0.05*canvas_rs-canvas_rs*canvas_st/100, y: h-d/2, text: "d="+m.round(d,0)+"cm", showarrow: false, xanchor: "right"},
+              //
+              {x: -0.05*canvas_rs, y: d1, ax: -0.05*canvas_rs, ay: 0, xref: 'x', yref: 'y', axref: 'x', ayref: 'y',text: '', arrowcolor: 'black', arrowhead: 4, arrowsize: 1, arrowwidth: 1},
+              {x: -0.05*canvas_rs, y: 0, ax: -0.05*canvas_rs, ay: d1, xref: 'x', yref: 'y', axref: 'x', ayref: 'y',text: '', arrowcolor: 'black', arrowhead: 4, arrowsize: 1, arrowwidth: 1},
+              {x: -0.05*canvas_rs-canvas_rs*canvas_st/100, y: d1/2, text: "d<sub>1</sub>="+m.round(d1,1)+"cm", showarrow: false, xanchor: "right"},
+              //
+              {x: b+0.05*canvas_rs, y: h,    ax: b+0.05*canvas_rs, ay: h-d2, xref: 'x', yref: 'y', axref: 'x', ayref: 'y',text: '', arrowcolor: 'black', arrowhead: 4, arrowsize: 1, arrowwidth: 1},
+              {x: b+0.05*canvas_rs, y: h-d2, ax: b+0.05*canvas_rs, ay: h, xref: 'x', yref: 'y', axref: 'x', ayref: 'y',text: '', arrowcolor: 'black', arrowhead: 4, arrowsize: 1, arrowwidth: 1},
+              {x: b+0.05*canvas_rs+canvas_rs*canvas_st/100, y: h-d2/2, text: "d<sub>2</sub>="+m.round(d2,1)+"cm", showarrow: false, xanchor: "left"},              
+              //
+              {x: gdefx0-1.05*bu, y: d1, ax: gdefx0, ay: d1, xref: 'x', yref: 'y', axref: 'x', ayref: 'y',text: '', arrowcolor: 'black', showarrow: true},
+              {x: gdefx0-1.05*bu, y: d1, text: 'ε<sub>s1</sub>', showarrow: false, xanchor: "right"},
+              //
+              {x: gdefx0-bu, y: d1-h*canvas_st/100, text: "ε<sub>ud</sub>="+m.round(epsud,2)+"‰", showarrow: false},
+              {x: gdefx0-bu, y: d1+0.25*h*canvas_st/100, ax: gdefx0-bu, ay: d1-0.25*h*canvas_st/100, xref: 'x', yref: 'y', axref: 'x', ayref: 'y',text: '', arrowcolor: 'black', arrowhead: 0, showarrow: true},
+              //
+              {x: gdefx0-epsyd*bu/epsud, y: d1-h*canvas_st/100, text: "ε<sub>yd</sub>="+m.round(epsyd,2)+"‰", showarrow: false},
+              {x: gdefx0-epsyd*bu/epsud, y: d1+0.25*h*canvas_st/100, ax: gdefx0-epsyd*bu/epsud, ay: d1-0.25*h*canvas_st/100, xref: 'x', yref: 'y', axref: 'x', ayref: 'y',text: '', arrowcolor: 'black', arrowhead: 0, showarrow: true},             
+              //
+              {x: gdefx0+1.1*canvas_bb, y: h, ax: gdefx0, ay: h, xref: 'x', yref: 'y', axref: 'x', ayref: 'y',text: '', arrowcolor: 'black', showarrow: true},
+              {x: gdefx0+1.1*canvas_bb, y: h, text: 'ε<sub>c,máx</sub>', showarrow: false, xanchor: "left"},
+              //
+              {x: gdefx0+epscu*bu/epsud, y: h+h*canvas_st/100, text: "ε<sub>cu</sub>="+m.round(epscu,1)+"‰", showarrow: false},
+              {x: gdefx0+epscu*bu/epsud, y: h+0.25*h*canvas_st/100, ax: gdefx0+epscu*bu/epsud, ay: h-0.25*h*canvas_st/100, xref: 'x', yref: 'y', axref: 'x', ayref: 'y',text: '', arrowcolor: 'black', arrowhead: 0, showarrow: true},
+              //
+              {x: gdefx0+1.1*canvas_bb, y: h-d2, ax: gdefx0, ay: h-d2, xref: 'x', yref: 'y', axref: 'x', ayref: 'y',text: '', arrowcolor: 'black', showarrow: true},
+              {x: gdefx0+1.1*canvas_bb, y: h-d2, text: 'ε<sub>s2</sub>', showarrow: false, xanchor: "left"},              
+              //
+              {x: gdefx0+epsyd*bu/epsud, y: h-d2-h*canvas_st/100, text: "ε<sub>yd</sub>="+m.round(epsyd,2)+"‰", showarrow: false},
+              {x: gdefx0+epsyd*bu/epsud, y: h-d2+0.25*h*canvas_st/100, ax: gdefx0+epsyd*bu/epsud, ay: h-d2-0.25*h*canvas_st/100, xref: 'x', yref: 'y', axref: 'x', ayref: 'y',text: '', arrowcolor: 'black', arrowhead: 0, showarrow: true},
+              
+              //
+              {x: gdefx0-0.1*canvas_bb, y: h, ax: gdefx0-0.1*canvas_bb, ay: h-xi*d, xref: 'x', yref: 'y', axref: 'x', ayref: 'y',text: '', arrowcolor: 'black', arrowhead: 4, arrowsize: 1, arrowwidth: 1},
+              {x: gdefx0-0.1*canvas_bb, y: h-xi*d, ax: gdefx0-0.1*canvas_bb, ay: h, xref: 'x', yref: 'y', axref: 'x', ayref: 'y',text: '', arrowcolor: 'black', arrowhead: 4, arrowsize: 1, arrowwidth: 1},
+              {x: gdefx0-0.1*canvas_bb-canvas_bb*canvas_st/100, y: h-0.5*xi*d, text: "x="+m.round(xi,3)+"·d", showarrow: false, xanchor: "right"},
+              //
+              {x: gdefx0-eps1*bu/epsud, y: d1+h*canvas_st/100, text: m.round(eps1,2)+"‰", showarrow: false, name: "eps1_text"},
+              {x: gdefx0-eps1*bu/epsud, y: d1+0.25*h*canvas_st/100, ax: gdefx0-eps1*bu/epsud, ay: d1-0.25*h*canvas_st/100, xref: 'x', yref: 'y', axref: 'x', ayref: 'y',text: '', arrowcolor: 'black', arrowhead: 0, showarrow: true, name: "eps1_arrow"},
+              //
+              {x: gdefx0+eps2*bu/epsud, y: h-d2+h*canvas_st/100, text: m.round(eps2,2)+"‰", showarrow: false},
+              {x: gdefx0+eps2*bu/epsud, y: h-d2+0.25*h*canvas_st/100, ax: gdefx0+eps2*bu/epsud, ay: h-d2-0.25*h*canvas_st/100, xref: 'x', yref: 'y', axref: 'x', ayref: 'y',text: '', arrowcolor: 'black', arrowhead: 0, showarrow: true},               
+              //
+              {x: gtenx0-bs*sigs1/fyd, y: d1-hAs1/2, ax: gtenx0, ay: d1-hAs1/2, xref: 'x', yref: 'y', axref: 'x', ayref: 'y',text: '', arrowcolor: 'red', arrowhead: 3, arrowsize: 1, arrowwidth: 1},
+              {x: gtenx0-bs*sigs1/fyd, y: d1+hAs1/2, ax: gtenx0, ay: d1+hAs1/2, xref: 'x', yref: 'y', axref: 'x', ayref: 'y',text: '', arrowcolor: 'red', arrowhead: 3, arrowsize: 1, arrowwidth: 1},
+              {x: gtenx0-bs*sigs1/fyd, y: d1-hAs1/2, ax: gtenx0-bs*sigs1/fyd, ay: d1+hAs1/2, xref: 'x', yref: 'y', axref: 'x', ayref: 'y',text: '', arrowcolor: 'red', arrowhead: 0, arrowwidth: 1, showarrow: true},
+              {x: gtenx0-0.5*bs*sigs1/fyd, y: d1+hAs1/2+h*canvas_st/100, text: m.round(sigs1/fyd,2)+"·f<sub>yd</sub>", showarrow: false},
+              //
+              {ax: gtenx0-bs*sigs2/fyd, y: h-d2-hAs2/2, x: gtenx0, ay: h-d2-hAs2/2, xref: 'x', yref: 'y', axref: 'x', ayref: 'y',text: '', arrowcolor: 'cyan', arrowhead: 3, arrowsize: 1, arrowwidth: 1},
+              {ax: gtenx0-bs*sigs2/fyd, y: h-d2+hAs2/2, x: gtenx0, ay: h-d2+hAs2/2, xref: 'x', yref: 'y', axref: 'x', ayref: 'y',text: '', arrowcolor: 'cyan', arrowhead: 3, arrowsize: 1, arrowwidth: 1},
+              {ax: gtenx0-bs*sigs2/fyd, y: h-d2-hAs2/2, x: gtenx0-bs*sigs2/fyd, ay: h-d2+hAs2/2, xref: 'x', yref: 'y', axref: 'x', ayref: 'y',text: '', arrowcolor: 'cyan', arrowhead: 0, arrowwidth: 1, showarrow: true},
+              {x: gtenx0-0.5*bs*sigs2/fyd, y: h-d2+hAs2/2+h*canvas_st/100, text: m.abs(m.round(sigs2/fyd,2))+"·f<sub>yd</sub>", showarrow: false},
+              //
+              {x: gtenx0, y: h, ax: gtenx0-bs*fcd/fyd, ay: h, xref: 'x', yref: 'y', axref: 'x', ayref: 'y',text: '', arrowcolor: 'blue', arrowhead: 3, arrowsize: 1, arrowwidth: 1},
+              {x: gtenx0, y: h-0.8*xi*d, ax: gtenx0-bs*fcd/fyd, ay: h-0.8*xi*d, xref: 'x', yref: 'y', axref: 'x', ayref: 'y',text: '', arrowcolor: 'blue', arrowhead: 3, arrowsize: 1, arrowwidth: 1},
+              {x: gtenx0, y: h-0.4*xi*d, ax: gtenx0-bs*fcd/fyd, ay: h-0.4*xi*d, xref: 'x', yref: 'y', axref: 'x', ayref: 'y',text: '', arrowcolor: 'blue', arrowhead: 3, arrowsize: 1, arrowwidth: 1},
+              {x: gtenx0-bs*fcd/fyd, y: h, ax: gtenx0-bs*fcd/fyd, ay: h-0.8*xi*d, xref: 'x', yref: 'y', axref: 'x', ayref: 'y',text: '', arrowcolor: 'blue', arrowhead: 0, arrowwidth: 1, showarrow: true},
+              {x: gtenx0-0.5*bs*fcd/fyd, y: h+h*canvas_st/100, text: 'f<sub>cd</sub>', showarrow: false}
+                ]
+              };
+
+        const config = { responsive: true };
+
+        Plotly.react("gd", [seccion_bruta, seccion_ln, area_As1,area_As2,
+                        def_hormigon, def_grietas, def_As1, def_As2, def_eps,
+              ten_hormigon, ten_grietas, ten_As1,ten_As2], layout, config);
+          if (eps1 > epsud) {
+            var index = gd.layout.annotations.findIndex(a => a.name === "eps1_text");
+            Plotly.relayout("gd",{[`annotations[${index}].visible`]: false });
+            var index = gd.layout.annotations.findIndex(a => a.name === "eps1_arrow");
+            Plotly.relayout("gd",{[`annotations[${index}].visible`]: false });
+          };
+      }
+
+      // Iniciar
+      calcular();
+
+      // Recalcular ante cualquier cambio
+      document.querySelectorAll('input, select').forEach(i => i.oninput = calcular);
+
+      document.getElementById("year").textContent = new Date().getFullYear();
+
+    </script>
+  </body>
+</html>
